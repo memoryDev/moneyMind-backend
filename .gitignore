@@ -1,0 +1,61 @@
+# Maven
+target/
+!.mvn/wrapper/mvnw
+!.mvn/wrapper/mvnw.cmd
+mvnw
+mvnw.cmd
+
+# Gradle
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+gradlew
+gradlew.bat
+
+# Spring Boot specific
+spring-boot-devtools.jar
+
+# Logs
+*.log
+logs/
+
+# IDE-specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+*.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Configuration files
+*.env
+*.properties
+
+# Compiled class files
+*.class
+
+# Packaging
+*.jar
+*.war
+
+# Node modules (if using frontend tools with Node.js)
+node_modules/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Build artifacts
+*.class
+*.jar
+*.war
+
+# Coverage
+coverage/
