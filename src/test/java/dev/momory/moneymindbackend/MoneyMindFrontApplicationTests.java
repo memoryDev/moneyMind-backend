@@ -1,4 +1,4 @@
-package dev.momory.moneymindfront;
+package dev.momory.moneymindbackend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
