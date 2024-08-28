@@ -10,15 +10,15 @@ spring:
     username: root
     password: root
 
-  #JPA 설정
+  # JPA 설정
   jpa:
+    hibernate:
+      ddl-auto: create  # DDL 생성 전략 설정 (create, update, validate, none)
+    show-sql: true      # SQL 쿼리 출력 여부
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MariaDBDialect
-        format_sql: true
-        use_sql_comments: true
-        ddl-auto: create
-#        show_sql: true
+        format_sql: true  # SQL 쿼리 포맷팅
+        use_sql_comments: true  # SQL 쿼리에 주석 추가
 
 #log
 logging.level.org.hibernate.sql: debug
