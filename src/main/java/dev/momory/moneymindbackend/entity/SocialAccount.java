@@ -12,10 +12,12 @@ public class SocialAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Comment("소셜 계정 고유 ID")
     private Long id;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "user_id")
+    @Comment("사용자 고유 ID")
     private User user;
 
     @Comment("소셜 로그인 제공자")
