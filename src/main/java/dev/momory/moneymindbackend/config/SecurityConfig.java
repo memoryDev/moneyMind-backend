@@ -1,0 +1,88 @@
+package dev.momory.moneymindbackend.config;
+
+import dev.momory.moneymindbackend.jwt.JWTFilter;
+import dev.momory.moneymindbackend.jwt.JWTUtil;
+import dev.momory.moneymindbackend.jwt.LoginFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private AuthenticationConfiguration authenticationConfiguration;
+    private JWTUtil jwtUtil;
+
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
+        this.authenticationConfiguration = authenticationConfiguration;
+        this.jwtUtil = jwtUtil;
+    }
+
+    /**
+     * AuthenticationManager를 Bean으로 등록하여 스프링 컨텍스트에서 사용 가능하게 합니다.
+     * AuthenticationManager은 사용자 인증을 관리하는 주요 인터페이스
+     */
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+    /**
+     * BCryptPasswordEncoder를 Bean으로 등록
+     * BCryptPasswordEncoder는 비밀번호를 해싱하는데 사용하며, 보안성이 높은 알고리즘 제공
+     * @return
+     */
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * SecurityFilterChain은 Bean으로 등록하여 HTTP 보안 설정을 정의
+     * CORS, CSRF 보호, 인증 및 권한 부여, 세션관리 정의
+     * @param http
+     * @return
+     * @throws Exception
+     */
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        // CORS 보호 기능을 비활성화
+        http.csrf(csrf -> csrf.disable());
+
+        // 기본적으로 제공되는 로그인 폼 기능 비활성화
+        http.formLogin(auth -> auth.disable());
+
+        // HTTP 기본 인증 비활성화
+        http.httpBasic(auth -> auth.disable());
+
+        // 요청에 대한 접근 제어 규칙 정의
+        http.authorizeHttpRequests(auth -> auth
+                // "/", "/login" 인증 없이 접근 허용
+                .requestMatchers("/", "/login").permitAll()
+                // 나머지 모든 요청에 대해서는 인증을 요구함
+                .anyRequest().authenticated());
+
+        // JWT 인증 필터를 LoginFilter 앞에 추가합니다.
+        http.addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
+
+        // 로그인 필터를 UsernamePasswordAuthenticationFilter 자리에 추가합니다.
+        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil)
+                , UsernamePasswordAuthenticationFilter.class);
+
+        // 세션 관리 정책을 설정
+        // 서버가 세션을 생성하거나 유지하지 않도록 합니다.
+        http.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        return http.build();
+    }
+}

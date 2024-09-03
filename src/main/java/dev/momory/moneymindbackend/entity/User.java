@@ -2,6 +2,8 @@ package dev.momory.moneymindbackend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -11,12 +13,17 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
+@ToString
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("사용자 고유 ID")
     private Long id;
+
+    @Comment("사용자 id")
+    private String userid;
 
     @Column(nullable = false)
     @Comment("사용자 이름")
@@ -38,7 +45,7 @@ public class User {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column
     @Comment("계정 수정 날짜")
     @LastModifiedDate
     private LocalDateTime updatedAt;
