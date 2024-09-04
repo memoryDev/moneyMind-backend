@@ -7,12 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
@@ -22,11 +20,19 @@ import java.io.IOException;
  * 인증이 성공적으로 완료된 후 JWT 토큰을 생성하여 응답(header)에 추가함
  */
 @Slf4j
-@RequiredArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        // 로그인 URL 변경
+        setFilterProcessesUrl("/api/login");
+        // 로그인 계정 파라미터 변경
+        setUsernameParameter("userid");
+    }
 
     /**
      * 사용자의 로그인 요청을 처리합니다.
@@ -39,12 +45,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 
         // 요청에서 사용자아이디, 비밀번호 추출
-        String username = obtainUsername(request);
-        String password = obtainUsername(request);
+        String userid = obtainUsername(request);
+        String password = obtainPassword(request);
+        log.info("userid = {}", userid);
 
         // 사용자 이름과 비밀번호를 포함한 인증 토큰 생성
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                new UsernamePasswordAuthenticationToken(username, password);
+                new UsernamePasswordAuthenticationToken(userid, password);
 
         // AuthenticationManager를 통해 인증 시도
         return authenticationManager.authenticate(usernamePasswordAuthenticationToken);

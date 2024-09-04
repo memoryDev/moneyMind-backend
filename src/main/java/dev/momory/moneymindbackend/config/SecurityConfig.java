@@ -68,7 +68,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable());
 
         // 기본적으로 제공되는 로그인 폼 기능 비활성화
-        http.formLogin(auth -> auth.disable());
+        http.formLogin(form -> form.disable());
 
         // HTTP 기본 인증 비활성화
         http.httpBasic(auth -> auth.disable());
@@ -76,7 +76,7 @@ public class SecurityConfig {
         // 요청에 대한 접근 제어 규칙 정의
         http.authorizeHttpRequests(auth -> auth
                 // "/", "/login" 인증 없이 접근 허용
-                .requestMatchers("/", "/login").permitAll()
+                .requestMatchers("/", "/api/login").permitAll()
                 // 나머지 모든 요청에 대해서는 인증을 요구함
                 .anyRequest().authenticated());
 
