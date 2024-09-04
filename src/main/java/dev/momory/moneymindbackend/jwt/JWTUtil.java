@@ -1,5 +1,6 @@
 package dev.momory.moneymindbackend.jwt;
 
+import dev.momory.moneymindbackend.dto.TokenCategory;
 import dev.momory.moneymindbackend.entity.AuthProvider;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,13 +99,29 @@ public class JWTUtil {
     }
 
     /**
+     * JWT 토큰에서 유형 구분하여 추출
+     * @param token 사용자 인증에 사용되는 JWT토큰
+     * @return 토큰유형 추출
+     */
+    public String getCategory(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("category", String.class);
+    }
+
+    /**
      * 새로운 JWT 토큰을 생성
+     * @param tokenCategory 토큰 카테고리(refresh/access)
      * @param userid 사용자 아이디
      * @param expiredMs 토큰의 만료 시간
      * @return 생성된 JWT 토큰 문자열
      */
-    public String createJwt(String userid, Long expiredMs) {
+    public String createJwt(TokenCategory tokenCategory, String userid, Long expiredMs) {
         return Jwts.builder()
+                .claim("category", tokenCategory.getValue())
                 .claim("userid", userid)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiredMs))

@@ -76,7 +76,7 @@ public class SecurityConfig {
         // 요청에 대한 접근 제어 규칙 정의
         http.authorizeHttpRequests(auth -> auth
                 // "/", "/login" 인증 없이 접근 허용
-                .requestMatchers("/", "/api/login").permitAll()
+                .requestMatchers("/", "/api/login", "/api/reissue").permitAll()
                 // 나머지 모든 요청에 대해서는 인증을 요구함
                 .anyRequest().authenticated());
 

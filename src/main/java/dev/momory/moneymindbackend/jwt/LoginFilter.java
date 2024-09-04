@@ -1,6 +1,8 @@
 package dev.momory.moneymindbackend.jwt;
 
 import dev.momory.moneymindbackend.dto.CustomUserDetails;
+import dev.momory.moneymindbackend.dto.TokenCategory;
+import dev.momory.moneymindbackend.util.CookieUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -77,11 +79,13 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String userid = customUserDetails.getUserid();
 
         // JWT 토큰 생성
-        String token = jwtUtil.createJwt(userid, 3600000L);
-        log.info("LoginFilter.token = {}", token);
+        String access = jwtUtil.createJwt(TokenCategory.ACCESS, userid, 600000L);
+        String refresh = jwtUtil.createJwt(TokenCategory.REFRESH, userid, 86400000L);
 
-        // 응답 헤더에 JWT 토큰 추가
-        response.addHeader("Authorization", "Bearer " + token);
+        // 응답 설정
+        response.setHeader(TokenCategory.ACCESS.getValue(), access);
+        response.addCookie(CookieUtil.createCookie(TokenCategory.REFRESH.getValue(), refresh));
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
     /**

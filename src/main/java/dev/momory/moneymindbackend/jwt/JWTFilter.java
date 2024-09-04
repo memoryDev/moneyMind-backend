@@ -1,8 +1,10 @@
 package dev.momory.moneymindbackend.jwt;
 
 import dev.momory.moneymindbackend.dto.CustomUserDetails;
+import dev.momory.moneymindbackend.dto.TokenCategory;
 import dev.momory.moneymindbackend.entity.AuthProvider;
 import dev.momory.moneymindbackend.entity.User;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * JWTFilter 클래스는 HTTP요청에서 JWT 토큰을 검증하고,
@@ -37,38 +40,48 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        // 요청 헤더에서 Authorization 헤더를 추출
-        String authorization = request.getHeader("Authorization");
-        log.info("JWTFilter.Authorization = {}", authorization);
+        // 요청 헤더에서 "access" 토큰 추출
+        String accessToken = request.getHeader(TokenCategory.ACCESS.getValue());
 
-        // Authorization 헤더가 없거나, "Bearer "로 시작하지 않을경우 종료
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            log.info("JWTFilter.token null");
+        // access 토큰이 없을 경우, 다음 필터로 이동하여 요청을 처리
+        if (accessToken == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Bearer 부분 제거후 토큰 추출
-        String token = authorization.replace("Bearer ", "");
+        try {
+            // JWT 토큰 만료 여부 확인
+            jwtUtil.isExpired(accessToken);
+        } catch (ExpiredJwtException e) {
+            // 토큰이 만료된 경우, 응답에 만료 메세지 작성
+            PrintWriter writer = response.getWriter();
+            writer.print("access token expired");
 
-        // 토큰 만료 여부 추출
-        Boolean tokenExpired = jwtUtil.isExpired(token);
-        log.info("JWTFilter.tokenExpired = {}", tokenExpired);
-
-        // 토큰이 만료 되었을경우 종료
-        if (tokenExpired) {
-            log.info("JWTFilter.tokenExpired null");
-            filterChain.doFilter(request, response);
+            // HTTP 응답 상태를 401로 설정(Unauthorized)
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // JWT 토큰에서 [userid, username, email, authProvider]정보 추출
-        String userid = jwtUtil.getUserid(token);
-        String username = jwtUtil.getUsername(token);
-        String email = jwtUtil.getUsername(token);
-        AuthProvider authProvider = jwtUtil.getAuthProvider(token);
+        // JWT 토큰에서 "category" 값을 추출
+        String category = jwtUtil.getCategory(accessToken);
 
-        // User 엔티티 객체 생성후 사용자 정보 설정
+        // "category" 값이 "access"인지 체크
+        if (!TokenCategory.ACCESS.getValue().equals(category)) {
+            PrintWriter writer = response.getWriter();
+            writer.print("access denied");
+
+            // HTTP 응답 상태를 401로 설정(Unauthorized)
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        // 토큰에서 사용자 정보를 추출
+        String userid = jwtUtil.getUserid(accessToken);
+        String username = jwtUtil.getUsername(accessToken);
+        String email = jwtUtil.getUsername(accessToken);
+        AuthProvider authProvider = jwtUtil.getAuthProvider(accessToken);
+
+        // 사용자 정보를 담은 User 객체 생성
         User user = new User();
         user.setUserid(userid);
         user.setUsername(username);
