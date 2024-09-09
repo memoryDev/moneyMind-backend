@@ -24,10 +24,10 @@ public class CookieUtil {
         cookie.setMaxAge(24 * 60 * 60);
 
         // 쿠키가 HTTPS 연결에서만 전송되도록 설정
-        // cookie.setSecure(true);
+         cookie.setSecure(false);
 
         // 쿠키의 유효 경로 설정
-        // cookie.setPath("/");
+         cookie.setPath("/");
 
         // 쿠키를 HttpOnly 속성으로 설정
         // JavaScript에서 쿠키에 접근하지 못하도록 방지하여 보안을 강화하는 설정
