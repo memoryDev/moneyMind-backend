@@ -123,8 +123,8 @@ public class JWTUtil {
         return Jwts.builder()
                 .claim("category", tokenCategory.getValue())
                 .claim("userid", userid)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiredMs))
+                        .issuedAt(new Date(System.currentTimeMillis()))
+                        .expiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(secretKey)
                 .compact();
     }
