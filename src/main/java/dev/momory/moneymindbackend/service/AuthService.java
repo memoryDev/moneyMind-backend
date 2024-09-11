@@ -1,5 +1,7 @@
 package dev.momory.moneymindbackend.service;
 
+import dev.momory.moneymindbackend.entity.User;
+import dev.momory.moneymindbackend.repository.UserRepository;
 import dev.momory.moneymindbackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import java.time.Duration;
 public class AuthService {
     private final RedisUtil redisUtil;
     private final RedisTemplate<String, String> redisTemplate;
+    private final UserRepository userRepository;
 
     public void logout(String token, RedirectAttributes redirectAttributes) {
         // token 블랙리스트에 추가
@@ -23,5 +26,9 @@ public class AuthService {
 
         // 쿠키에서 Refresh Token 삭제
         redirectAttributes.addFlashAttribute("logoutSuccess", true);
+    }
+
+    public Boolean checkUseridDuplicate(String userid) {
+        return userRepository.existsByUserid(userid);
     }
 }
