@@ -1,16 +1,23 @@
 package dev.momory.moneymindbackend.controller;
 
 import dev.momory.moneymindbackend.dto.LogoutRequest;
+import dev.momory.moneymindbackend.dto.SignUpRequest;
 import dev.momory.moneymindbackend.dto.TokenCategory;
+import dev.momory.moneymindbackend.entity.User;
 import dev.momory.moneymindbackend.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -79,5 +86,38 @@ public class AuthController {
         log.info("AuthController.checkUseridDuplicate - userid is available");
         return ResponseEntity.status(HttpStatus.OK)
                 .body("사용 가능한 아이디 입니다.");
+    }
+
+    /**
+     * 회원가입 메서드
+     * @param signUpRequest 회원가입할 사용자 정보 DTO
+     * @return 응답
+     */
+    @PostMapping("/api/signup")
+    public ResponseEntity<?> signupUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+
+        log.info("AuthController.signupUser = {}", signUpRequest);
+
+        try {
+            // 회원가입 로직
+            User savedEntity = authService.signupUser(signUpRequest);
+            log.info("회원가입 성공 - 유저 아이디 = {}", savedEntity.getUserid());
+
+            // 회원가입 성공 응답
+            return ResponseEntity.ok("회원가입이 성공적으로 완료되었습니다.");
+
+        } catch (IllegalArgumentException e) {
+            log.warn("회원가입 중복 오류: {}", e.getMessage());
+
+            Map<String, String> errors = new HashMap<>();
+            errors.put("userid", e.getMessage());
+
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(errors);
+        } catch (Exception e) {
+            log.error("회원가입 처리 중 오류 발생");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("회원가입에 실패했습니다. 다시 시도해 주세요.");
+        }
     }
 }

@@ -1,17 +1,20 @@
 package dev.momory.moneymindbackend.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @ToString
@@ -40,7 +43,7 @@ public class User {
     @Comment("프로필 사진 URL")
     private String profilePicture;
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     @Comment("계정 생성 날짜")
     @CreatedDate
     private LocalDateTime createdAt;
@@ -57,4 +60,12 @@ public class User {
     @Comment("소셜 로그인 사용자 ID")
     @OneToMany(mappedBy = "user")
     private List<SocialAccount> socialAccount;
+
+    /**
+     * 패스워드 암호화
+     * @param password 암호화된 값
+     */
+    public void encryptPassword (String password) {
+        this.password = password;
+    }
 }
