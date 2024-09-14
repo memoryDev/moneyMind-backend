@@ -21,7 +21,7 @@ public class SignUpRequest {
     private String confirmPassword;
 
     @NotBlank(message = "이름을 입력해주세요.")
-    @Pattern(regexp = "^[가-힣]*$", message = "한글로 입력해 주세요.")
+    @Pattern(regexp = "^[가-힣]*$", message = "한글만 입력해 주세요.")
     private String name;
 
     @NotBlank(message = "이메일을 입력해주세요.")

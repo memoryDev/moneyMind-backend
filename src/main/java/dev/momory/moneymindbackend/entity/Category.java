@@ -20,4 +20,9 @@ public class Category {
     @Column(nullable = false)
     @Comment("카테고리 아이콘")
     private String icon;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Comment("카테고리 고정 여부")
+    private CategoryFixedStatus fixedStatus;
 }

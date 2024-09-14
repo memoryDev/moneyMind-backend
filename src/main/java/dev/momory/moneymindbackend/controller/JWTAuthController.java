@@ -6,6 +6,7 @@ import dev.momory.moneymindbackend.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class JWTAuthController {
 
     private final JWTAuthService jwtAuthService;
@@ -32,6 +34,7 @@ public class JWTAuthController {
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
         // 요청에서 리프레시 토큰을 쿠키에서 추출
         String refresh = CookieUtil.getCookieValue(request.getCookies());
+        log.info("refresh = {}", refresh);
 
         try {
             // JWTAuthService를 사용하여 리프레시 토큰 검증 및 새 토큰 발급
@@ -51,4 +54,5 @@ public class JWTAuthController {
         }
 
     }
+
 }
