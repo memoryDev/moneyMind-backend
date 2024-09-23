@@ -5,7 +5,6 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import dev.momory.moneymindbackend.dto.CategorySearchDTO;
 import dev.momory.moneymindbackend.entity.Category;
-import dev.momory.moneymindbackend.entity.QCategory;
 import dev.momory.moneymindbackend.entity.SearchType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -71,6 +70,11 @@ public class CategoryCustomRepositoryImpl implements CategoryCustomRepository {
         return queryFactory.selectFrom(category)
                 .where(category.name.eq(name))
                 .fetch().isEmpty();
+    }
+
+    @Override
+    public Category findById(Integer id) {
+        return em.find(Category.class, id);
     }
 
     private BooleanExpression searchTypeEq(SearchType searchType, String searchValue) {

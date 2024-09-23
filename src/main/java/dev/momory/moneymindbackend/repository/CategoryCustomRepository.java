@@ -15,4 +15,6 @@ public interface CategoryCustomRepository {
     void addCategories(Category category);
 
     Boolean existsByName(String name);
+
+    Category findById(Integer id);
 }

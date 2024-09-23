@@ -2,6 +2,7 @@ package dev.momory.moneymindbackend.controller;
 
 import dev.momory.moneymindbackend.dto.AddCategoryRequest;
 import dev.momory.moneymindbackend.dto.AddCategoryResponse;
+import dev.momory.moneymindbackend.dto.CategoryDetailResponse;
 import dev.momory.moneymindbackend.dto.CategorySearchDTO;
 import dev.momory.moneymindbackend.entity.Category;
 import dev.momory.moneymindbackend.exception.CustomException;
@@ -14,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,6 +40,11 @@ public class CategoryController {
         return ResponseDTO.successResponse(page, "success");
     }
 
+    /**
+     * 카테고리 추가
+     * @param addCategory 카테고리 추가 정보
+     * @return 카테고리 추가 성공 및 실패 메세지
+     */
     @PostMapping("/api/categories")
     public ResponseDTO<?> addCategories(@Valid @RequestBody AddCategoryRequest addCategory) {
 
@@ -59,6 +64,29 @@ public class CategoryController {
 
         return ResponseDTO.successResponse(dto, "카테고리 추가 성공하였습니다.");
     }
+
+    /**
+     * 카테고리 상세 조회
+     * @param id 카테고리 게시글 번호
+     * @return 카테고리 상세 조회 성공 및 실패 메세지
+     */
+    @GetMapping("/api/categories/{id}")
+    public ResponseDTO<?> getCategoryDetails(@PathVariable Integer id) {
+
+        // 입력받은 값이 null이거나, 0번이하이거나
+        if (id == null || id <= 0) {
+            log.warn("CategoryController.getCategoryDetails ERR_MISSING_PATH_PARAMETER = {}", id);
+            throw new CustomException(HttpStatus.BAD_REQUEST, "필수 파라미터가 누락되었습니다. 확인해주세요.", "ERR_MISSING_PATH_PARAMETER");
+        }
+
+        CategoryDetailResponse categoryDTO = categoryService.getCategoryDetails(id);
+
+        return ResponseDTO.successResponse(categoryDTO, "카테고리 상세 조회 success");
+    }
+
+    /**
+     * 카테고리 상세정보 수정
+     */
 
 
 }

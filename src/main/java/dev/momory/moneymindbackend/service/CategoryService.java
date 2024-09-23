@@ -1,5 +1,6 @@
 package dev.momory.moneymindbackend.service;
 
+import dev.momory.moneymindbackend.dto.CategoryDetailResponse;
 import dev.momory.moneymindbackend.dto.CategorySearchDTO;
 import dev.momory.moneymindbackend.entity.Category;
 import dev.momory.moneymindbackend.exception.CustomException;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -42,5 +44,19 @@ public class CategoryService {
 
         // 카테고리 추가
         categoryRepository.addCategories(category);
+    }
+
+    public CategoryDetailResponse getCategoryDetails(Integer id) {
+
+        // 카테고리 조회
+        Category category = categoryRepository.findById(id);
+
+        // 조회된 카테고리가 없을경우
+        if (ObjectUtils.isEmpty(category)) {
+            throw new CustomException(HttpStatus.UNPROCESSABLE_ENTITY, "조회된 카테고리 상세정보가 존재하지 않습니다. 확인해주세요.", "ERR_EMPTY_CATEGORY_DATA");
+        }
+
+        return new CategoryDetailResponse().toDTO(category);
+
     }
 }
