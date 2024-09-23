@@ -2,11 +2,13 @@ package dev.momory.moneymindbackend.service;
 
 import dev.momory.moneymindbackend.dto.SignUpRequest;
 import dev.momory.moneymindbackend.entity.User;
+import dev.momory.moneymindbackend.exception.CustomException;
 import dev.momory.moneymindbackend.repository.UserRepository;
 import dev.momory.moneymindbackend.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -33,7 +35,16 @@ public class AuthService {
     }
 
     public Boolean checkUseridDuplicate(String userid) {
-        return userRepository.existsByUserid(userid);
+
+        Boolean isUserExists = userRepository.existsByUserid(userid);
+
+        // 가입여부 체크
+        if (isUserExists) {
+            log.warn("AuthController.checkUseridDuplicate = {} - DUPLICATE_USER_ID", userid);
+            throw new CustomException(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다.", "DUPLICATE_USER_ID");
+        }
+
+        return isUserExists;
     }
 
     public User signupUser (SignUpRequest signUpRequest) {
@@ -47,15 +58,15 @@ public class AuthService {
 
         // entity값이 null이거나 빈 값이면 null 반환
         if (ObjectUtils.isEmpty(entity)) {
-            log.debug("AuthService.entity.isEmpty = {}", "true");
-            throw new IllegalArgumentException("유효하지 않은 사용자 정보입니다.");
+            log.debug("AuthService.entity.isEmpty = {}", "ENTITY_FIELD_REQUIRED");
+            throw new CustomException(HttpStatus.BAD_REQUEST, "유효하지 않은 사용자 정보입니다.", "ENTITY_FIELD_REQUIRED");
         }
 
         // 아이디 중복 체크
         Boolean isUserExists = userRepository.existsByUserid(entity.getUserid());
         if (isUserExists) {
-            log.error("AuthService.signupUser: 이미 존재하는 아이디입니다. {}", entity.getUserid());
-            throw new IllegalArgumentException("이미 존재하는 아이디입니다.");
+            log.error("AuthService.signupUser: 이미 존재하는 아이디입니다. - {}", entity.getUserid());
+            throw new CustomException(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다.", "DUPLICATE_USER_ID");
         }
 
         // 사용자 정보 저장

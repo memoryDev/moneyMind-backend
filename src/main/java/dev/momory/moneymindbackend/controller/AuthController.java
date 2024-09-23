@@ -4,20 +4,20 @@ import dev.momory.moneymindbackend.dto.LogoutRequest;
 import dev.momory.moneymindbackend.dto.SignUpRequest;
 import dev.momory.moneymindbackend.dto.TokenCategory;
 import dev.momory.moneymindbackend.entity.User;
+import dev.momory.moneymindbackend.exception.CustomException;
+import dev.momory.moneymindbackend.response.ResponseDTO;
 import dev.momory.moneymindbackend.service.AuthService;
+import dev.momory.moneymindbackend.util.CustomResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,16 +29,24 @@ public class AuthController {
     /**
      * 로그아웃 요청을 처리하는 메서드
      * 사용자가 로그아웃을 요청할때, 로그아웃 처리를 하고 리프레시 토큰을 쿠키에서 제거함
-     * @param logoutRequest 로그아웃 요청 정보(Access Token 포함)
+//     * @param logoutRequest 로그아웃 요청 정보(Access Token 포함)
      * @param redirectAttributes 리다이렉트 시 사용할 속성
      * @return 로그아웃 성공 메세지를 포함한 HTTP 응답
      */
     @PostMapping("/api/logout")
-    public ResponseEntity<String> logout(
-            @RequestBody LogoutRequest logoutRequest,
+    public ResponseDTO<?> logout(
+            HttpServletRequest request,
+            HttpServletResponse response,
             RedirectAttributes redirectAttributes) {
 
-        log.debug("AuthController.logout = {}", logoutRequest.getAccess());
+        String access = request.getHeader(TokenCategory.ACCESS.getValue());
+
+        // access token이 없을경우
+        if (StringUtils.isEmpty(access)) {
+            throw new CustomException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다.", "INVALID_TOKEN");
+        }
+
+        LogoutRequest logoutRequest = new LogoutRequest(access);
 
         // 서비스 로직
         authService.logout(logoutRequest.getAccess(), redirectAttributes);
@@ -51,10 +59,11 @@ public class AuthController {
                 .maxAge(0) // 쿠키의 만료시간 설정(즉시만료)
                 .build(); // 쿠키 빌드
 
+
+
         // 쿠키 제거하고 로그아웃 성공 메세지와 HTTP 200(성공) 응답 반환
-        return ResponseEntity.ok()
-                .header("Set-Cookie", cookie.toString()) // 응답 헤더에 쿠키 추가
-                .body("Logged out successfully"); // 응답 바디에 로그아웃 성공 메세지 추가
+        response.setHeader("Set-Cookie", cookie.toString());
+        return ResponseDTO.successResponse(null, "logout success");
     }
 
     /**
@@ -64,28 +73,20 @@ public class AuthController {
      * @return 중복 여부에 맞는 메세지와 HTTP 응답코드
      */
     @GetMapping("/api/get/{userid}")
-    public ResponseEntity<String> checkUseridDuplicate(@PathVariable("userid") String userid) {
+    public ResponseDTO<?> checkUseridDuplicate(@PathVariable("userid") String userid) {
 
         // 입력받은 아이디가 null이거나 빈값일경우
         if (!StringUtils.hasText(userid)) {
-            log.info("AuthController.checkUseridDuplicate = userid bad request");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("아이디를 입력해주세요.");
+            log.warn("AuthController.checkUseridDuplicate = userid bad request");
+            throw new CustomException(HttpStatus.BAD_REQUEST, "아이디를 입력해주세요", "USER_ID_REQUIRED");
         }
 
         // 사용자 아아디 존재 여부 확인
-        Boolean isUserExists = authService.checkUseridDuplicate(userid);
-
-        // 아이디가 이미 존재하는 경우
-        if (isUserExists) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("이미 존재하는 아이디입니다.");
-        }
+        authService.checkUseridDuplicate(userid);
 
         // 아이디가 사용 가능한 경우
         log.info("AuthController.checkUseridDuplicate - userid is available");
-        return ResponseEntity.status(HttpStatus.OK)
-                .body("사용 가능한 아이디 입니다.");
+        return ResponseDTO.successResponse(null,"사용 가능한 아이디 입니다.");
     }
 
     /**
@@ -94,30 +95,12 @@ public class AuthController {
      * @return 응답
      */
     @PostMapping("/api/signup")
-    public ResponseEntity<?> signupUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+    public ResponseDTO<?> signupUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+        // 회원가입 로직
+        User savedEntity = authService.signupUser(signUpRequest);
+        log.info("회원가입 성공 - 유저 아이디 = {}", savedEntity.getUserid());
 
-        log.info("AuthController.signupUser = {}", signUpRequest);
-
-        try {
-            // 회원가입 로직
-            User savedEntity = authService.signupUser(signUpRequest);
-            log.info("회원가입 성공 - 유저 아이디 = {}", savedEntity.getUserid());
-
-            // 회원가입 성공 응답
-            return ResponseEntity.ok("회원가입이 성공적으로 완료되었습니다.");
-
-        } catch (IllegalArgumentException e) {
-            log.warn("회원가입 중복 오류: {}", e.getMessage());
-
-            Map<String, String> errors = new HashMap<>();
-            errors.put("userid", e.getMessage());
-
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(errors);
-        } catch (Exception e) {
-            log.error("회원가입 처리 중 오류 발생");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("회원가입에 실패했습니다. 다시 시도해 주세요.");
-        }
+        // 회원가입 성공 응답
+        return ResponseDTO.successResponse(null, "회원가입 성공적으로 완료되었습니다.");
     }
 }

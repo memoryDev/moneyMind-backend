@@ -5,7 +5,6 @@ public enum CategoryFixedStatus {
     FIXED,
     NOT_FIXED;
 
-
     private String value;
 
     public String getValue() {

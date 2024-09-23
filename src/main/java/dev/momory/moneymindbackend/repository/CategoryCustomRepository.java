@@ -11,4 +11,8 @@ public interface CategoryCustomRepository {
     List<Category> testCategory();
 
     Page<Category>getCategories(CategorySearchDTO searchDTO);
+
+    void addCategories(Category category);
+
+    Boolean existsByName(String name);
 }

@@ -7,6 +7,8 @@ import dev.momory.moneymindbackend.dto.CategorySearchDTO;
 import dev.momory.moneymindbackend.entity.Category;
 import dev.momory.moneymindbackend.entity.QCategory;
 import dev.momory.moneymindbackend.entity.SearchType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,9 @@ import static dev.momory.moneymindbackend.entity.QCategory.category;
 public class CategoryCustomRepositoryImpl implements CategoryCustomRepository {
 
     private final JPAQueryFactory queryFactory;
+
+    @PersistenceContext
+    private final EntityManager em;
 
     @Override
     public List<Category> testCategory() {
@@ -46,14 +51,26 @@ public class CategoryCustomRepositoryImpl implements CategoryCustomRepository {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-//        queryFactory
-//                .selectFrom(category)
-//                .where(
-//                        searchTypeEq(searchDTO.getSearchType(), searchDTO.getSearchValue())
-//                )
-//                .fetch()
+        int totalSize = queryFactory
+                .selectFrom(category)
+                .where(
+                        searchTypeEq(searchDTO.getSearchType(), searchDTO.getSearchValue())
+                )
+                .fetch().size();
 
-        return new PageImpl<>(results, pageable, results.size());
+        return new PageImpl<>(results, pageable, totalSize);
+    }
+
+    @Override
+    public void addCategories(Category category) {
+        em.persist(category);
+    }
+
+    @Override
+    public Boolean existsByName(String name) {
+        return queryFactory.selectFrom(category)
+                .where(category.name.eq(name))
+                .fetch().isEmpty();
     }
 
     private BooleanExpression searchTypeEq(SearchType searchType, String searchValue) {

@@ -3,12 +3,12 @@ package dev.momory.moneymindbackend.controller;
 import dev.momory.moneymindbackend.dto.TokenCategory;
 import dev.momory.moneymindbackend.service.JWTAuthService;
 import dev.momory.moneymindbackend.util.CookieUtil;
+import dev.momory.moneymindbackend.util.CustomResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,7 +31,7 @@ public class JWTAuthController {
      * @return HTTP 상태 코드와 함께 요청 처리 결과를 포함한 ResponseEntity
      */
     @PostMapping("/api/reissue")
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+    public CustomResponse<?> reissue(HttpServletRequest request, HttpServletResponse response) {
         // 요청에서 리프레시 토큰을 쿠키에서 추출
         String refresh = CookieUtil.getCookieValue(request.getCookies());
         log.info("refresh = {}", refresh);
@@ -47,10 +47,10 @@ public class JWTAuthController {
             response.addCookie(CookieUtil.createCookie(TokenCategory.REFRESH.getValue(), tokens[1]));
 
             // 응답 성공
-            return new ResponseEntity<>(HttpStatus.OK);
+            return CustomResponse.success(tokens[0], "토큰 제발급 성공");
         } catch (IllegalArgumentException | IllegalStateException e) {
             // 토큰 검증 또는 재발급 중 발생한 예외에 대해 BAD_REQUEST 응답 반환
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return CustomResponse.fail(HttpStatus.BAD_REQUEST, e.getMessage());
         }
 
     }

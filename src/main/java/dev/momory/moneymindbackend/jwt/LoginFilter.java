@@ -2,12 +2,14 @@ package dev.momory.moneymindbackend.jwt;
 
 import dev.momory.moneymindbackend.dto.CustomUserDetails;
 import dev.momory.moneymindbackend.dto.TokenCategory;
+import dev.momory.moneymindbackend.exception.CustomException;
 import dev.momory.moneymindbackend.util.CookieUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -99,8 +101,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
         log.info("LoginFilter.unsuccessfulAuthentication");
-
-        // 응답 코드 401 설정
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        throw new CustomException(HttpStatus.UNAUTHORIZED, "로그인 실패하였습니다. 다시 시도해주세요.", "LOGIN_FAILED");
     }
 }
