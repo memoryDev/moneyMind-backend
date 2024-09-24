@@ -39,4 +39,13 @@ public class AddCategoryRequest {
     public Category toEntity() {
         return new Category(name, icon, fixedStatus);
     }
+
+    /**
+     * DTO -> ENTITY 변환
+     * @param userid access토큰에서 추출한 userid
+     * @return
+     */
+    public Category toEntity(String userid) {
+        return new Category(name, icon, fixedStatus, userid);
+    }
 }

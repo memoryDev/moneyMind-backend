@@ -63,7 +63,8 @@ public class AuthService {
         }
 
         // 아이디 중복 체크
-        Boolean isUserExists = userRepository.existsByUserid(entity.getUserid());
+        Boolean isUserExists = checkUseridDuplicate(entity.getUserid());
+
         if (isUserExists) {
             log.error("AuthService.signupUser: 이미 존재하는 아이디입니다. - {}", entity.getUserid());
             throw new CustomException(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다.", "DUPLICATE_USER_ID");

@@ -15,6 +15,7 @@ public class AddCategoryResponse {
     private String name;
     private CategoryFixedStatus fixedStatus;
     private String icon;
+    private String userid;
 
     /**
      * entity -> Response DTO
@@ -24,6 +25,7 @@ public class AddCategoryResponse {
         this.name = category.getName();
         this.fixedStatus = category.getFixedStatus();
         this.icon = category.getIcon();
+        this.userid = category.getUserid();
 
         return this;
     }

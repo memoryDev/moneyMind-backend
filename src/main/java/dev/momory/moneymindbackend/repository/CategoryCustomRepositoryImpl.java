@@ -73,6 +73,13 @@ public class CategoryCustomRepositoryImpl implements CategoryCustomRepository {
     }
 
     @Override
+    public Boolean existsByNameAndIdNot(String name, Integer id) {
+        return queryFactory.selectFrom(category)
+                .where(category.name.eq(name).and(category.id.ne(id.longValue())))
+                .fetch().isEmpty();
+    }
+
+    @Override
     public Category findById(Integer id) {
         return em.find(Category.class, id);
     }

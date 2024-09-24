@@ -1,12 +1,11 @@
 package dev.momory.moneymindbackend.controller;
 
-import dev.momory.moneymindbackend.dto.AddCategoryRequest;
-import dev.momory.moneymindbackend.dto.AddCategoryResponse;
-import dev.momory.moneymindbackend.dto.CategoryDetailResponse;
-import dev.momory.moneymindbackend.dto.CategorySearchDTO;
+import dev.momory.moneymindbackend.dto.*;
 import dev.momory.moneymindbackend.entity.Category;
 import dev.momory.moneymindbackend.exception.CustomException;
+import dev.momory.moneymindbackend.jwt.JWTUtil;
 import dev.momory.moneymindbackend.response.ResponseDTO;
+import dev.momory.moneymindbackend.service.AuthService;
 import dev.momory.moneymindbackend.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final AuthService authService;
+    private final JWTUtil jwtUtil;
 
     /**
      * 카테고리 목록 조회
@@ -46,15 +48,29 @@ public class CategoryController {
      * @return 카테고리 추가 성공 및 실패 메세지
      */
     @PostMapping("/api/categories")
-    public ResponseDTO<?> addCategories(@Valid @RequestBody AddCategoryRequest addCategory) {
-
+    public ResponseDTO<?> addCategories(@Valid @RequestBody AddCategoryRequest addCategory
+                                        ,@RequestHeader(name = "access") String accessToken) {
         // DTO NULL 일시
         if (addCategory == null) {
             throw new CustomException(HttpStatus.BAD_REQUEST, "필수 값이 누락되었습니다. 확인해주세요.", "ERR_NULL_ENTITY");
         }
 
-        // dto -> entity 변환
-        Category category = addCategory.toEntity();
+        // access 체크
+        if (!StringUtils.hasText(accessToken)) {
+            log.warn("CategoryController.addCategories: ERR_TOKEN_EXPIRED");
+            throw new CustomException(HttpStatus.FORBIDDEN, "토큰이 만료되었습니다. 다시 로그인 해주세요.", "ERR_TOKEN_EXPIRED");
+        }
+
+        // access token 에서 userid 추출
+        String userid = jwtUtil.getUserid(accessToken);
+
+        // 사용자의 아이디가 존재하는지확인
+        // 사용자의 아이디가 존재하지않을경우 종료됨
+        categoryService.checkUseridDuplicate(userid);
+
+//        // dto -> entity 변환
+        Category category = addCategory.toEntity(userid);
+        log.info("CategoryController.addCategories: category = {}", category);
 
         categoryService.addCategories(category);
         log.info("CategoryController.addCategories.addCategory = {}", category);
@@ -71,7 +87,8 @@ public class CategoryController {
      * @return 카테고리 상세 조회 성공 및 실패 메세지
      */
     @GetMapping("/api/categories/{id}")
-    public ResponseDTO<?> getCategoryDetails(@PathVariable Integer id) {
+    public ResponseDTO<?> getCategoryDetails(@PathVariable Integer id,
+                                             @RequestHeader(name = "access") String accessToken) {
 
         // 입력받은 값이 null이거나, 0번이하이거나
         if (id == null || id <= 0) {
@@ -79,7 +96,21 @@ public class CategoryController {
             throw new CustomException(HttpStatus.BAD_REQUEST, "필수 파라미터가 누락되었습니다. 확인해주세요.", "ERR_MISSING_PATH_PARAMETER");
         }
 
+        // access 체크
+        if (!StringUtils.hasText(accessToken)) {
+            log.warn("CategoryController.getCategoryDetails: ERR_TOKEN_EXPIRED");
+            throw new CustomException(HttpStatus.FORBIDDEN, "토큰이 만료되었습니다. 다시 로그인 해주세요.", "ERR_TOKEN_EXPIRED");
+        }
+
+        // access token 에서 userid 추출
+        String userid = jwtUtil.getUserid(accessToken);
+
+        // 사용자의 아이디가 존재하는지확인
+        // 사용자의 아이디가 존재하지않을경우 종료됨
+        categoryService.checkUseridDuplicate(userid);
+
         CategoryDetailResponse categoryDTO = categoryService.getCategoryDetails(id);
+        categoryDTO.categoryIsMyPost(userid);
 
         return ResponseDTO.successResponse(categoryDTO, "카테고리 상세 조회 success");
     }
@@ -87,6 +118,36 @@ public class CategoryController {
     /**
      * 카테고리 상세정보 수정
      */
+    @PutMapping("/api/categories/{id}")
+    public ResponseDTO<?> updateCategories(@PathVariable Integer id
+                                           , @RequestBody UpdateCategoryRequest categoryRequest
+                                           , @RequestHeader(name = "access") String accessToken
+                                           ) {
+
+        // 입력받은 값이 null이거나, 0번이하이거나
+        if (id == null || id <= 0) {
+            log.warn("CategoryController.updateCategories ERR_MISSING_PATH_PARAMETER = {}", id);
+            throw new CustomException(HttpStatus.BAD_REQUEST, "필수 파라미터가 누락되었습니다. 확인해주세요.", "ERR_MISSING_PATH_PARAMETER");
+        }
+
+        // access 체크
+        if (!StringUtils.hasText(accessToken)) {
+            log.warn("CategoryController.getCategoryDetails: ERR_TOKEN_EXPIRED");
+            throw new CustomException(HttpStatus.FORBIDDEN, "토큰이 만료되었습니다. 다시 로그인 해주세요.", "ERR_TOKEN_EXPIRED");
+        }
+
+        // access token 에서 userid 추출
+        String userid = jwtUtil.getUserid(accessToken);
+
+        // 사용자의 아이디가 존재하는지확인
+        // 사용자의 아이디가 존재하지않을경우 종료됨
+        categoryService.checkUseridDuplicate(userid);
+
+        Category categoryEntity = categoryService.updateCategories(id, userid, categoryRequest);
+        UpdateCategoryResponse responseDTO = new UpdateCategoryResponse().toDTO(categoryEntity);
+
+        return ResponseDTO.successResponse(responseDTO, "게시글 수정 성공하였습니다.");
+    }
 
 
 }

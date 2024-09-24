@@ -16,5 +16,7 @@ public interface CategoryCustomRepository {
 
     Boolean existsByName(String name);
 
+    Boolean existsByNameAndIdNot(String name, Integer id);
+
     Category findById(Integer id);
 }
