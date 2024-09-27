@@ -15,6 +15,16 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 public class Account {
 
+    public Account() {
+    }
+
+    public Account(AccountType accountType, String accountName, String accountNickname, BigDecimal balance) {
+        this.accountType = accountType;
+        this.accountName = accountName;
+        this.accountNickname = accountNickname;
+        this.balance = balance;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("계좌 고유 ID")
@@ -48,5 +58,13 @@ public class Account {
     @Comment("계좌 수정 날짜")
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    /**
+     * user 추가
+     * @param user 조회된 유저정보
+     */
+    public void addUser(User user) {
+        this.user = user;
+    }
 
 }
