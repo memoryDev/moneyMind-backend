@@ -2,6 +2,7 @@ package dev.momory.moneymindbackend.controller;
 
 import dev.momory.moneymindbackend.dto.AddAccountOrCardRequest;
 import dev.momory.moneymindbackend.dto.AddAccountOrCardResponse;
+import dev.momory.moneymindbackend.dto.GetAccountOrCardResponse;
 import dev.momory.moneymindbackend.exception.CustomException;
 import dev.momory.moneymindbackend.jwt.JWTUtil;
 import dev.momory.moneymindbackend.response.ResponseDTO;
@@ -12,10 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
@@ -27,6 +25,12 @@ public class FinancesController {
     private final FinancesService financesService;
     private final JWTUtil jwtUtil;
 
+    /**
+     * 금융 신규등록
+     * @param addDTO 요청받은 파라미터
+     * @param accessToken 요청 Header accessToken
+     * @return 성공여부
+     */
     @PostMapping("/api/finances")
     public ResponseDTO<?> addAccountOrCard (@Valid @RequestBody(required = false) AddAccountOrCardRequest addDTO
                                                     ,@RequestHeader(name = "access") String accessToken) {
@@ -56,6 +60,24 @@ public class FinancesController {
         AddAccountOrCardResponse responseDTO = financesService.addAccountOrCard(addDTO);
 
         return ResponseDTO.successResponse(responseDTO, "account add success");
+    }
+
+    @GetMapping("/api/finances/{id}")
+    public ResponseDTO<?> getAccountOrCardDetails(@PathVariable(required = false) Long id, @RequestHeader(name = "access") String accessToken) {
+
+        // parameter check
+        if (id == null || id <= 0) {
+            log.warn("FinancesController.getAccountOrCardDetails = {}", "id is null");
+            throw new CustomException(HttpStatus.BAD_REQUEST, "상세조회중 오류가 발생하였습니다. 다시시도해주세요.", "ERR_ID_REQUIRED");
+        }
+
+        // access token 에서 userid 추출
+        String userid = jwtUtil.getUserid(accessToken);
+
+        // 상세조회
+        GetAccountOrCardResponse responseDTO = financesService.getAccountOrCardDetails(id, userid);
+
+        return ResponseDTO.successResponse(responseDTO, "상세조회 성공");
     }
 
 

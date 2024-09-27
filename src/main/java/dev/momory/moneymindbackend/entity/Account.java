@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 public class Account {
 

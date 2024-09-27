@@ -2,6 +2,7 @@ package dev.momory.moneymindbackend.service;
 
 import dev.momory.moneymindbackend.dto.AddAccountOrCardRequest;
 import dev.momory.moneymindbackend.dto.AddAccountOrCardResponse;
+import dev.momory.moneymindbackend.dto.GetAccountOrCardResponse;
 import dev.momory.moneymindbackend.entity.Account;
 import dev.momory.moneymindbackend.entity.User;
 import dev.momory.moneymindbackend.exception.CustomException;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -49,6 +52,18 @@ public class FinancesService {
 
         // ENTITY -> DTO
         AddAccountOrCardResponse responseDTO = new AddAccountOrCardResponse().toDTO(savedEntity);
+
+        return responseDTO;
+    }
+
+    public GetAccountOrCardResponse getAccountOrCardDetails(Long id, String userid) {
+
+        // 게시글 조회
+        Account entity = financesRepository.findById(id)
+                .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "존재하지 않는 게시글 입니다.", "ERR_ENTITY_NOT_FOUND"));
+
+        // entity -> dto
+        GetAccountOrCardResponse responseDTO = new GetAccountOrCardResponse().toDTO(entity, userid);
 
         return responseDTO;
     }
