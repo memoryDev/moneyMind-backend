@@ -1,5 +1,6 @@
 package dev.momory.moneymindbackend.entity;
 
+import dev.momory.moneymindbackend.dto.UpdateAccountOrCardRequest;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.Comment;
@@ -67,6 +68,16 @@ public class Account {
      */
     public void addUser(User user) {
         this.user = user;
+    }
+
+    /**
+     * 게시글 업데이트
+     */
+    public void updateAccount(UpdateAccountOrCardRequest dto) {
+        this.balance = dto.getBalance();
+        this.accountName = dto.getAccountName();
+        this.accountNickname = dto.getAccountNickname();
+        this.accountType = dto.getAccountType();
     }
 
 }

@@ -1,8 +1,6 @@
 package dev.momory.moneymindbackend.service;
 
-import dev.momory.moneymindbackend.dto.AddAccountOrCardRequest;
-import dev.momory.moneymindbackend.dto.AddAccountOrCardResponse;
-import dev.momory.moneymindbackend.dto.GetAccountOrCardResponse;
+import dev.momory.moneymindbackend.dto.*;
 import dev.momory.moneymindbackend.entity.Account;
 import dev.momory.moneymindbackend.entity.User;
 import dev.momory.moneymindbackend.exception.CustomException;
@@ -10,6 +8,8 @@ import dev.momory.moneymindbackend.repository.FinancesRepository;
 import dev.momory.moneymindbackend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -66,5 +66,30 @@ public class FinancesService {
         GetAccountOrCardResponse responseDTO = new GetAccountOrCardResponse().toDTO(entity, userid);
 
         return responseDTO;
+    }
+
+    public UpdateAccountOrCardResponse updateAccountOrCard(UpdateAccountOrCardRequest updateDTO, Long id, String userid) {
+        // 게시글 조회
+        Account entity = financesRepository.findById(id)
+                .orElseThrow(() -> new CustomException(HttpStatus.BAD_REQUEST, "존재하지 않는 게시글 입니다.", "ERR_ENTITY_NOT_FOUND"));
+
+        // 본인글 인지 체크
+        if (!userid.equals(entity.getUser().getUserid())) {
+            log.warn("FinancesService.updateAccountOrCard = {} - {}", "userid", "ERR_NOT_AUTHORIZED");
+            throw new CustomException(HttpStatus.FORBIDDEN, "본인이 작성한 게시글만 수정하실수 있습니다.", "ERR_NOT_AUTHORIZED");
+        }
+
+        // 조회된 게시글 수정
+        entity.updateAccount(updateDTO);
+
+        // 수정후 save 실행
+        Account savedEntity = financesRepository.save(entity);
+
+        // 응답 DTO 변환후 반환
+        return new UpdateAccountOrCardResponse().toDTO(savedEntity);
+    }
+
+    public Page<GetAccountOrCardListResponse> getAccountOrCardList(Pageable pageable, String userid) {
+        return financesRepository.getAccountOrCardList(pageable, userid);
     }
 }
